@@ -6,7 +6,6 @@ library(tensorflow)
 
 use_virtualenv("~/tf_petya_venv/", required = TRUE)
 
-rho
 ## Parameters
 N <- 20 # time discretization
 T <- 2 # maturity
@@ -21,6 +20,12 @@ mu2 <- 0
 sigma1 <- 0.1
 sigma2 <- 0.1
 rho <- 0.5
+## Parameters for plotting
+pdf_width <- 10
+pdf_height <- 7
+rhos <- c(0.75, 0.9, 0)
+for(rho in rhos){
+  print(paste0("Rho =", rho))
 {
 starting_time <- Sys.time()
 ## Train/Test setup
@@ -166,6 +171,37 @@ compare_ratios <- function(asset, t, rho = rho){
   list(NN = nn_hedge, THEORY = theor)
 }
 
+## Function to show evolution of hedging portfolio's value over time
+hedging_pf_val_exchange <- function(path_num, showplot = T, rho = rho){
+  ## Neural Network
+  hp_nn_val <- rep(0, times = (N+1))
+  hp_nn_val[1] <- V_0
+  hp_theor_val <- rep(0, times = (N+1))
+  hp_theor_val[1] <- V_0
+  for (i in 2:(N+1)) {
+    ## NN Hedging Portfolio
+    gains_from_asset1_nn <- (prices1[[i]][path_num] - prices1[[i-1]][path_num]) * ratios_asset1[[i-1]]$NN[path_num]
+    gains_from_asset2_nn <- (prices2[[i]][path_num] - prices2[[i-1]][path_num]) * ratios_asset2[[i-1]]$NN[path_num]
+    hp_nn_val[i] <- hp_nn_val[i-1] + gains_from_asset1_nn + gains_from_asset2_nn
+    ## Theor. Hedging Portfolio
+    gains_from_asset1_theor <- (prices1[[i]][path_num] - prices1[[i-1]][path_num]) * ratios_asset1[[i-1]]$THEORY[path_num]
+    gains_from_asset2_theor <- (prices2[[i]][path_num] - prices2[[i-1]][path_num]) * ratios_asset2[[i-1]]$THEORY[path_num]
+    hp_theor_val[i] <- hp_theor_val[i-1] + gains_from_asset1_theor + gains_from_asset2_theor
+  }
+  option_payoff <- max(prices1[[(N+1)]][path_num] - prices2[[(N+1)]][path_num], 0)
+  if(showplot == T){
+    par(mfrow = c(1,1))
+    title <- paste("Evolution of Hedging Portfolios vs. Option Payoff, Sim Nr.", path_num)
+    plot(TimePoints, hp_nn_val, type = "line", main = title, ylim = c(0, 50), ylab = "Value", xlab = "t", col = "blue")
+    abline(option_payoff, 0, col = "purple")
+    par(new = T)
+    plot(TimePoints, hp_theor_val, type = "line", ylim = c(0,50), ylab = "", xlab = "", col = "black")
+    legend("topleft", c("NN Hedging Portfolio", "Theor. Hedging Portfolio", "Option Payoff"), col = c("blue", "black", "purple"), lty = 1, cex = 0.5)
+  }
+  list(NN = hp_nn_val, THEORY = hp_theor_val)
+}
+
+
 ## Function to get hedging ratios over time; also plots evolution if showplot set to TRUE
 hedge_over_time <- function(path_num, showplot = T, rho = rho){
   hedging_times <- TimePoints[-length(TimePoints)] # only times considered where we actually rebalance
@@ -193,22 +229,22 @@ hedge_over_time <- function(path_num, showplot = T, rho = rho){
     par(mfrow = c(1,2))
     plot(test_gens[,,path_num][1,], type = "line", col = "blue", ylim = c(100, 200), ylab = "", main = tit1)
     par(new = T)
-    plot(test_gens[,,path_num][2,], type = "line", col = "green", ylim = c(100, 200), ylab = "")
-    legend("topright", c("Asset 1", "Asset 2"), col = c("blue", "green"), lty = 1)
+    plot(test_gens[,,path_num][2,], type = "line", col = "black", ylim = c(100, 200), ylab = "")
+    legend("topright", c("Asset 1", "Asset 2"), col = c("blue", "black"), lty = 1)
     
     ## Plot hedging ratios:
     # Asset 1:
     
     plot(hedges_asset1[,1], type = "line",col = "blue", ylim = c(-1,1), ylab = "", main = tit2)
     par(new = T)
-    plot(hedges_asset1[,2], type = "line", col = "red", ylim = c(-1,1), ylab = "")
+    plot(hedges_asset1[,2], type = "line", col = "black", ylim = c(-1,1), ylab = "")
     # Asset 2:
     par(new = T)
     plot(hedges_asset2[,1], type = "line", lty = 2,col = "blue", ylim = c(-1,1), ylab = "")
     par(new = T)
-    plot(hedges_asset2[,2], type = "line", lty = 2, col = "red", ylim = c(-1,1), ylab = "")
+    plot(hedges_asset2[,2], type = "line", lty = 2, col = "black", ylim = c(-1,1), ylab = "")
     legend("topleft", c("NN Hedge Asset 1", "Theor. Hedge Asset 1", "NN Hedge Asset 2", "Theor. Hedge Asset 2"),
-           col = c("blue", "red", "blue", "red"), lty = c(1,1,2,2), cex = 0.5)
+           col = c("blue", "black", "blue", "black"), lty = c(1,1,2,2), cex = 0.5)
   }
   list(Asset1 = hedges_asset1, Asset2 = hedges_asset2)
 }
@@ -281,6 +317,8 @@ ytrain <- f(training_paths)
 
 # Actual training
 
+print(paste0("Training for rho = ", rho))
+
 model_wealth %>% fit(
   x = xtrain,
   y = ytrain,
@@ -307,9 +345,9 @@ show_qq <- function(t, rho){
   q2s <- compare_ratios(asset = 2, t = t, rho = rho)
   par(mfrow = c(1,2))
   qqplot(q1s$NN, q1s$THEORY, main = "Asset 1", ylab = "Theoretical Quantiles", xlab = "NN Quantiles")
-  abline(0, 1, col = "red")
+  abline(0, 1, col = "purple")
   qqplot(q2s$NN, q2s$THEORY, main = "Asset 2", ylab = "Theoretical Quantiles", xlab = "NN Quantiles")
-  abline(0,1,col = "red")
+  abline(0,1,col = "purple")
 }
 show_qq(t = 1.8, rho = rho)
 
@@ -363,7 +401,121 @@ expected_shortfall_nn <- mean(fin_nn[which(fin_nn < as.numeric(quantile(fin_nn, 
 expected_shortfall_theory <- mean(fin_theory[which(fin_theory < as.numeric(quantile(fin_theory, 0.05)))])
 
 
+example_path_num <- ceiling(runif(1) * 10000)
+while(final_payoffs[example_path_num] == 0){
+  example_path_num <- ceiling(runif(1) * 10000)
+}
+## Chunk to save hedge_over_time output as PDF
+
+# 1. Define the output path
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_hedge_over_time_rho", rho, ".pdf")
+
+# 2. Open the PDF device
+pdf(plot_path, width = pdf_width, height = pdf_height)
+
+
+# 3. Re-run your plotting code
+hedge_over_time(path_num = example_path_num, showplot = T, rho = rho)
+
+# 4. Close the device to write the file
+dev.off()
+
+## Chunk to save evolution output as PDF
+
+# 1. Define the output path
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_hedging_portfolio_over_time_rho", rho, ".pdf")
+
+# 2. Open the PDF device
+pdf(plot_path)
+
+# 3. Re-run your plotting code
+hedging_pf_val_exchange(path_num = example_path_num, showplot = T, rho = rho)
+
+# 4. Close the device to write the file
+dev.off()
+
+## Chunk to save histogram output as PDF
+
+# 1. Define the output path
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_histogram_rho", rho, ".pdf")
+
+# 2. Open the PDF device
+pdf(plot_path, width = pdf_width, height = pdf_height)
+
+# 3. Re-run your plotting code
+par(mfrow = c(1,2), oma = c(0,0,3,0))
+hist(fin_nn, main = "NN Strategy" , xlim = c(-10, 10), xlab = "Net Payoff", breaks = 20)
+hist(fin_theory, main = "Theoretical Strategy", xlim = c(-10, 10), xlab = "Net Payoff", breaks = 20)
+mtext(paste0("Payoffs Hedging Portfolio net of final Option Values for rho =", rho), outer = T)
+# 4. Close the device to write the file
+dev.off()
+
+## Save QQ Plots as PDF
+## Asset 1
+# 1. Define the output path
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_qqplot_asset1_rho", rho, ".pdf")
+
+# 2. Open the PDF device
+pdf(plot_path, width = pdf_width, height = pdf_height)
+
+# 3. Re-run your plotting code
+par(mfrow = c(1,2), oma = c(0,0,3,0))
+qqplot(x = ratios_asset1[[2]]$NN, y = ratios_asset1[[2]]$THEORY, xlab = "NN Ratios", ylab = "Theoretical Ratios", main = "t = 0.1")
+abline(0, 1, col = "blue")
+qqplot(x = ratios_asset1[[20]]$NN, y = ratios_asset1[[20]]$THEORY, xlab = "NN Ratios", ylab = "Theoretical Ratios", main = "t = 1.9")
+abline(0, 1, col = "blue")
+mtext("Comparison Hedging Ratios - Asset 1", outer = T)
+# 4. Close the device to write the file
+dev.off()
+
+## Asset 2
+# 1. Define the output path
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_qqplot_asset2_rho", rho, ".pdf")
+
+# 2. Open the PDF device
+pdf(plot_path, width = pdf_width, height = pdf_height)
+
+# 3. Re-run your plotting code
+par(mfrow = c(1,2), oma = c(0,0,3,0))
+qqplot(x = ratios_asset2[[2]]$NN, y = ratios_asset2[[2]]$THEORY, xlab = "NN Ratios", ylab = "Theoretical Ratios", main = "t = 0.1")
+abline(0, 1, col = "blue")
+qqplot(x = ratios_asset2[[20]]$NN, y = ratios_asset2[[20]]$THEORY, xlab = "NN Ratios", ylab = "Theoretical Ratios", main = "t = 1.9")
+abline(0, 1, col = "blue")
+mtext("Comparison Hedging Ratios - Asset 2", outer = T)
+# 4. Close the device to write the file
+dev.off()
+
 ending_time <- Sys.time()
+
+## Risk measures
+# Means
+m_nn <- mean(fin_nn)
+m_theory <- mean(fin_theory)
+
+# VaR
+vars_nn <- quantile(fin_nn, probs = c(0.05, 0.95))
+vars_theory <- quantile(fin_theory, probs = c(0.05, 0.95))
+
+var_nn <- quantile(fin_nn, probs = c(0.05))
+var_theory <- quantile(fin_theory, probs = c(0.05))
+
+# Expected Shortfall
+es_nn <- mean(fin_nn[which(fin_nn < as.numeric(quantile(fin_nn, 0.05)))])
+es_theory <- mean(fin_theory[which(fin_theory < as.numeric(quantile(fin_theory, 0.05)))])
+
+res <- data.frame(rho = rho, m_nn = m_nn, m_theory = m_theory, var_nn = as.numeric(var_nn), var_theory = as.numeric(var_theory), es_nn = es_nn, es_theory = es_theory)
+res
+filename <- paste0("/Users/martonzorenyi/Downloads/results_exchange", rho, ".csv")
+write.csv(res, file = filename)
+save.image(paste0("/Users/martonzorenyi/Downloads/image_exchange_rho", rho, ".RData"))
+print("Image saved")
+if(file.exists("/Users/martonzorenyi/Downloads/results_exchange.csv")){
+  results_so_far <- read.csv("/Users/martonzorenyi/Downloads/results_exchange.csv", header = T)
+}
+
+res <- rbind(results_so_far[,-1], res)
+write.csv(res, file = "/Users/martonzorenyi/Downloads/results_exchange.csv")
+print(paste("Ended at", Sys.time()))
 
 print(paste("Started at", starting_time, ", ended at", ending_time))
 print(paste0("Results for rho = ", rho, ":"))
@@ -378,9 +530,4 @@ par(mfrow = c(1,2))
 hist(fin_nn, main = paste("Payoff net of Hedges - NN Strategy, rho =",rho) , xlim = c(-5, 5), xlab = "Net Payoff", breaks = 20)
 hist(fin_theory, main = paste("Payoff net of Hedges - Theoretical Strategy, rho =", rho), xlim = c(-5, 5), xlab = "Net Payoff", breaks = 20)
 }
-par(mfrow = c(1,2))
-show_qq(t=1.8, rho = 0.9)
-show_qq(t= 1.8, rho = 0.9)
-
-hedge_over_time(path_num = 1, rho = rho)
-hedge_over_time(path_num = 400, rho = rho)
+}
