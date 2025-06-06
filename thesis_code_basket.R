@@ -1,4 +1,4 @@
-#### basket Options Code clean ####
+ #### basket Options Code clean ####
   
   library(keras)
   library(reticulate)
@@ -438,7 +438,7 @@
     ytrain <- f(training_paths)
     
     # Actual training
-    print("Training the model")
+    print(paste0("Training for rho = ", rho))
     model_wealth %>% fit(
       x = xtrain,
       y = ytrain,
