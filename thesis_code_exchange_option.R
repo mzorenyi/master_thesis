@@ -23,13 +23,14 @@ rho <- 0.5
 ## Parameters for plotting
 pdf_width <- 10
 pdf_height <- 7
-rhos <- c(0.75, 0.9, 0)
+rhos <- c(0.1,0.9)
 for(rho in rhos){
+  set.seed(seed = 261000)
   print(paste0("Rho =", rho))
 {
 starting_time <- Sys.time()
 ## Train/Test setup
-Ktrain <-40000 # Size of training data
+Ktrain <- 40000 # Size of training data
 Ktest <- 10000 # Size of test data
 epochs <- 100
 batch_size <- 256
@@ -237,14 +238,14 @@ hedge_over_time <- function(path_num, showplot = T, rho = rho){
     
     plot(hedges_asset1[,1], type = "line",col = "blue", ylim = c(-1,1), ylab = "", main = tit2)
     par(new = T)
-    plot(hedges_asset1[,2], type = "line", col = "black", ylim = c(-1,1), ylab = "")
+    plot(hedges_asset1[,2], type = "line", lty = 2, col = "blue", ylim = c(-1,1), ylab = "")
     # Asset 2:
     par(new = T)
-    plot(hedges_asset2[,1], type = "line", lty = 2,col = "blue", ylim = c(-1,1), ylab = "")
+    plot(hedges_asset2[,1], type = "line",col = "black", ylim = c(-1,1), ylab = "")
     par(new = T)
     plot(hedges_asset2[,2], type = "line", lty = 2, col = "black", ylim = c(-1,1), ylab = "")
     legend("topleft", c("NN Hedge Asset 1", "Theor. Hedge Asset 1", "NN Hedge Asset 2", "Theor. Hedge Asset 2"),
-           col = c("blue", "black", "blue", "black"), lty = c(1,1,2,2), cex = 0.5)
+           col = c("blue", "blue", "black", "black"), lty = c(1,2,1,2), cex = 0.5)
   }
   list(Asset1 = hedges_asset1, Asset2 = hedges_asset2)
 }
@@ -408,7 +409,7 @@ while(final_payoffs[example_path_num] == 0){
 ## Chunk to save hedge_over_time output as PDF
 
 # 1. Define the output path
-plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_hedge_over_time_rho", rho, ".pdf")
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_hedge_over_time_rho", rho, "v3.pdf")
 
 # 2. Open the PDF device
 pdf(plot_path, width = pdf_width, height = pdf_height)
@@ -423,7 +424,7 @@ dev.off()
 ## Chunk to save evolution output as PDF
 
 # 1. Define the output path
-plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_hedging_portfolio_over_time_rho", rho, ".pdf")
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_hedging_portfolio_over_time_rho", rho, "v3.pdf")
 
 # 2. Open the PDF device
 pdf(plot_path)
@@ -437,7 +438,7 @@ dev.off()
 ## Chunk to save histogram output as PDF
 
 # 1. Define the output path
-plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_histogram_rho", rho, ".pdf")
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_histogram_rho", rho, "v3.pdf")
 
 # 2. Open the PDF device
 pdf(plot_path, width = pdf_width, height = pdf_height)
@@ -453,7 +454,7 @@ dev.off()
 ## Save QQ Plots as PDF
 ## Asset 1
 # 1. Define the output path
-plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_qqplot_asset1_rho", rho, ".pdf")
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_qqplot_asset1_rho", rho, "v3.pdf")
 
 # 2. Open the PDF device
 pdf(plot_path, width = pdf_width, height = pdf_height)
@@ -470,7 +471,7 @@ dev.off()
 
 ## Asset 2
 # 1. Define the output path
-plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_qqplot_asset2_rho", rho, ".pdf")
+plot_path <- paste0("/Users/martonzorenyi/Downloads/exchange_qqplot_asset2_rho", rho, "v3.pdf")
 
 # 2. Open the PDF device
 pdf(plot_path, width = pdf_width, height = pdf_height)
