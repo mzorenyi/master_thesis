@@ -1,4 +1,4 @@
- #### basket Options Code clean ####
+  #### basket Options Code clean ####
   
   library(keras)
   library(reticulate)
@@ -30,12 +30,15 @@
   activator <- "relu" # Activation function to use in the networks # maybe 'relu' can be tried
   rho <- 0.25
   n_mc <- 1000
-#rhos <- c(0, 0.1)
-#for (rho in rhos) {
-  
+  seed <- 789134
   ## Parameters for plotting
   pdf_width <- 10
   pdf_height <- 7
+  
+rhos <- c(0.5, 0.75, 0.9)
+for (rho in rhos) {
+  
+  set.seed(seed = seed)
   
   {
   ## Network structure
@@ -263,14 +266,14 @@
       
       plot(TimePoints[1:N], nn1, type = "line",col = "blue", ylim = c(0,1), ylab = "", main = tit2, xlab = "t")
       par(new = T)
-      plot(TimePoints[1:N], mc1, type = "line", col = "black", ylim = c(0,1), ylab = "", xlab = "")
+      plot(TimePoints[1:N], mc1, type = "line",lty = 2, col = "blue", ylim = c(0,1), ylab = "", xlab = "")
       # Asset 2:
       par(new = T)
-      plot(TimePoints[1:N], nn2, type = "line", lty = 2,col = "blue", ylim = c(0,1), ylab = "", xlab = "")
+      plot(TimePoints[1:N], nn2, type = "line",col = "black", ylim = c(0,1), ylab = "", xlab = "")
       par(new = T)
       plot(TimePoints[1:N], mc2, type = "line", lty = 2, col = "black", ylim = c(0,1), ylab = "", xlab = "")
       legend("topleft", c("NN Hedge Asset 1", "Theor. Hedge Asset 1", "NN Hedge Asset 2", "Theor. Hedge Asset 2"),
-             col = c("blue", "black", "blue", "black"), lty = c(1,1,2,2), cex = 0.5)
+             col = c("blue", "blue", "black", "black"), lty = c(1,2,1,2), cex = 0.5)
     }
     NN <- list(asset1 = nn1, asset2 = nn2)
     MC <- list(asset1 = mc1, asset2 = mc2)
@@ -542,7 +545,7 @@
   
   ## Chunk to save histogram output as PDF
   # 1. Define the output path
-  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_payoff_rho", rho, ".pdf")
+  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_payoff_rho", rho, "_v2.pdf")
   
   # 2. Open the PDF device
   pdf(plot_path, width = pdf_width, height = pdf_height)
@@ -558,7 +561,7 @@
   ## Chunk to save hedge_over_time output as PDF
   
   # 1. Define the output path
-  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_hedge_over_time_rho", rho, ".pdf")
+  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_hedge_over_time_rho", rho, "_v2.pdf")
   
   # 2. Open the PDF device
   pdf(plot_path, width = pdf_width, height = pdf_height)
@@ -573,7 +576,7 @@
   ## Chunk to save evolution output as PDF
   
   # 1. Define the output path
-  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_hedging_portfolio_over_time_rho", rho, ".pdf")
+  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_hedging_portfolio_over_time_rho", rho, "_v2.pdf")
   
   # 2. Open the PDF device
   pdf(plot_path)
@@ -587,7 +590,7 @@
   ## Save QQ Plots as PDF
   ## Asset 1
   # 1. Define the output path
-  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_qqplot_asset1_rho", rho, ".pdf")
+  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_qqplot_asset1_rho", rho, "_v2.pdf")
   
   # 2. Open the PDF device
   pdf(plot_path, width = pdf_width, height = pdf_height)
@@ -604,7 +607,7 @@
   
   ## Asset 2
   # 1. Define the output path
-  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_qqplot_asset2_rho", rho, ".pdf")
+  plot_path <- paste0("/Users/martonzorenyi/Downloads/basket_qqplot_asset2_rho", rho, "_v2.pdf")
   
   # 2. Open the PDF device
   pdf(plot_path, width = pdf_width, height = pdf_height)
@@ -636,11 +639,11 @@
   filename <- paste0("/Users/martonzorenyi/Downloads/results_basket", rho, ".csv")
   print("Results saved")
   write.csv(res, file = filename)
-  save.image(paste0("/Users/martonzorenyi/Downloads/image_basket_rho", rho, ".RData"))
+  save.image(paste0("/Users/martonzorenyi/Downloads/image_basket_rho", rho, "_v2.RData"))
   print("Image saved")
   results_so_far <- read.csv("/Users/martonzorenyi/Downloads/results_basket.csv", header = T)
   res <- rbind(results_so_far[,-1], res)
   write.csv(res, file = "/Users/martonzorenyi/Downloads/results_basket.csv")
   print(paste("Ended at", Sys.time()))
 }
-#} ## bracket closing for loop
+} ## bracket closing for loop
