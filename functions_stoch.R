@@ -2,10 +2,7 @@
 # Time Conversion function
 
 TimeConv <- function(t) {
-  # return(sqrt(T - t))   ## Works better as input variable in case of diffusion models!
-  #return(T - t)  ## The NN expects a time to maturity as information
-  return(t)  ## The NN expects actual time as information. The results are the same as 'time to maturity'
-  ## but the information will be stored differently in the NN.
+  T-t
 }
 
 # Function to generate Asset paths:
