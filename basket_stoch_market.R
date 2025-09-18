@@ -100,8 +100,6 @@ vola1 <- iv_asset(asset1)
 vola2 <- iv_asset(asset2)
 
 
-# joint_xts is your 2-column xts object (Close and Close.1)
-# Example: rolling 20-day correlation
 # --- 1. Compute 30-day rolling correlation from joined xts ---
 rolling_corr <- rollapply(
   joint,
@@ -112,7 +110,7 @@ rolling_corr <- rollapply(
   fill = NA
 )
 
-# Remove NA padding
+# Remove NAs
 hallo <- na.omit(rolling_corr)
 
 # Find differences
@@ -121,13 +119,12 @@ hallo <- na.omit(rolling_corr)
 a <- density(hallo, from = -0.99, to = 0.99)
 #plot(a)
 
-# Your empirical data
+# Empirical Data
 x_data <- a$x
 y_data <- a$y
 
-# Your model function (replace with your actual one)
+# Transition Density
 model <- function(x, par) {
-  # Example: par[1] = A, par[2] = B
   KAPPA <- par[1]
   THETA <- par[2]
   ((1-x)/(1+x))^(-THETA * KAPPA) * (1+x^2)^(KAPPA - 1)  # <-- replace with your actual function
@@ -139,7 +136,7 @@ loss_fn <- function(par) {
   sum((pred - y_data)^2)
 }
 
-# Optimization (use reasonable starting values)
+# Optimization
 opt <- optim(par = c(10, 0.4), fn = loss_fn, method = "L-BFGS-B", lower = c(0.1,-0.99), upper = c(10, 0.99))
 
 # Best-fit parameters
