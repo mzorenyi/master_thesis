@@ -100,8 +100,6 @@ S2_name <- "PG"
   # For static model just take 5-year long run correlation
   corr <- 0
   
-  # joint_xts is your 2-column xts object (Close and Close.1)
-  # Example: rolling 20-day correlation
   # --- 1. Compute 30-day rolling correlation from joined xts ---
   rolling_corr <- rollapply(
     joint,
@@ -112,7 +110,7 @@ S2_name <- "PG"
     fill = NA
   )
   
-  # Remove NA padding
+  # Remove NAs
   hallo <- na.omit(rolling_corr)
   
   # Find differences
@@ -121,11 +119,11 @@ S2_name <- "PG"
   a <- density(hallo, from = -0.99, to = 0.99)
   #plot(a)
   
-  # Your empirical data
+  # Empirical Data
   x_data <- a$x
   y_data <- a$y
   
-  # Your model function (replace with your actual one)
+  # Transition Density
   model <- function(x, par) {
     # Example: par[1] = A, par[2] = B
     KAPPA <- par[1]
@@ -139,7 +137,7 @@ S2_name <- "PG"
     sum((pred - y_data)^2)
   }
   
-  # Optimization (use reasonable starting values)
+  # Optimization
   opt <- optim(par = c(10, 0.4), fn = loss_fn, method = "L-BFGS-B", lower = c(0.1,-0.99), upper = c(10, 0.99))
   
   # Best-fit parameters
