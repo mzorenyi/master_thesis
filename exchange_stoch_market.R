@@ -29,7 +29,7 @@ S2_name <- "PG"
   duration <- "1m"
   print(paste("Applying Model for Stocks", S1_name, "and", S2_name, "for timeframe", duration))
   aod <- "2025-06-16"
-  end_date <- "7/18/25" #m/dd/yy format because Bloomberg is stupid
+  end_date <- "7/18/25" #m/dd/yy format in Bloomberg data
   end_date_qmod <- "2025-07-18"
   
   # For plots and saving Results:
