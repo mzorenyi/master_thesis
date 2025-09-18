@@ -100,10 +100,6 @@ S2_name <- "PLTR"
   vola2 <- iv_asset(asset2)
   
   # For static model just take 5-year long run correlation
-  ########### To be added - Take Theta instead  ########### 
-  #rho <- THETA
-  # joint_xts is your 2-column xts object (Close and Close.1)
-  # Example: rolling 20-day correlation
   # --- 1. Compute 30-day rolling correlation from joined xts ---
   rolling_corr <- rollapply(
     joint,
@@ -114,7 +110,7 @@ S2_name <- "PLTR"
     fill = NA
   )
   
-  # Remove NA padding
+  # Remove NAs
   hallo <- na.omit(rolling_corr)
   
   # Find differences
@@ -123,11 +119,11 @@ S2_name <- "PLTR"
   a <- density(hallo, from = -0.99, to = 0.99)
   #plot(a)
   
-  # Your empirical data
+  # Empirical Data
   x_data <- a$x
   y_data <- a$y
   
-  # Your model function (replace with your actual one)
+  # Transition Density Function
   model <- function(x, par) {
     # Example: par[1] = A, par[2] = B
     KAPPA <- par[1]
@@ -141,7 +137,7 @@ S2_name <- "PLTR"
     sum((pred - y_data)^2)
   }
   
-  # Optimization (use reasonable starting values)
+  # Optimization
   opt <- optim(par = c(10, 0.4), fn = loss_fn, method = "L-BFGS-B", lower = c(0.1,-0.99), upper = c(10, 0.99))
   
   # Best-fit parameters
@@ -234,10 +230,7 @@ S2_name <- "PLTR"
   
   # Time Conversion function
   TimeConv <- function(t) {
-    # return(sqrt(T - t))   ## Works better as input variable in case of diffusion models!
-    return(T - t)  ## The NN expects a time to maturity as information
-    # return(t)  ## The NN expects actual time as information. The results are the same as 'time to maturity'
-    ## but the information will be stored differently in the NN.
+    T-t
   }
   
   ###### Functions ######
